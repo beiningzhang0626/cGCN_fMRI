@@ -1,27 +1,21 @@
-import random
-import imp
 import os
 import h5py
 import numpy as np
 import keras
-import keras.backend as K
-import tensorflow as tf
-from keras.layers import BatchNormalization, Dropout, Conv2D, TimeDistributed
-from keras.layers import Lambda, Flatten, Activation, Dense, Input
-from keras.preprocessing.image import ImageDataGenerator, load_img, img_to_array, list_pictures
-from keras.regularizers import l2
+import pandas as pd
+from keras import backend as k
 from keras import optimizers
-import keras.backend as K
-import matplotlib.pyplot as plt
 from time import gmtime, strftime
 from model import *
+from matplotlib import pyplot
+import matplotlib.pyplot as plt
 
 ROI_N = 236
 frames = 100
-
 # ########################################## Load data ########################################
 # Download the data from https://drive.google.com/file/d/1l029ZuOIUY5gehBZCAyHaJqMNuxRHTFc/view?usp=sharing
 with h5py.File('HCP.h5', 'r') as f:
+    print(list(f.keys()))
     x_train, x_val, x_test = f['x_train'][()], f['x_val'][()], f['x_test'][()]
     y_train, y_val, y_test = f['y_train'][()], f['y_val'][()], f['y_test'][()]
 
@@ -36,8 +30,6 @@ print (x_test.shape)
 
 # Convert class vectors to binary class matrices.
 num_classes = 100
-
-
 y_train = keras.utils.to_categorical(y_train, num_classes)
 y_val = keras.utils.to_categorical(y_val, num_classes)
 y_test = keras.utils.to_categorical(y_test, num_classes)
@@ -61,6 +53,14 @@ print('batch_size:', batch_size)
 print('epochs:', epochs)
 print('lr:', lr)
 
+
+ROI_N = 236
+random_FC = np.random.rand(ROI_N, ROI_N)
+random_FC[np.diag_indices(ROI_N)] = 1
+np.save('FC_random', random_FC)
+plt.imshow(random_FC)
+plt.show()
+
 file_name='avg_edgeconv_k_' + str(k) + '_l2_' + str(l2_reg) + '_dp_' + str(dp)
 print('file_name:', file_name)
 
@@ -68,6 +68,7 @@ os.system('mkdir tmp') # folder for the trained model
 tmp_name = 'tmp/tmp_' + file_name + '_' + strftime("%Y_%m_%d_%H_%M_%S", gmtime()) + '.hdf5'
 print('output tmp name:', tmp_name)
 
+print("hi1")
 ############################################### Get pre-trained model  ############################
 weight_name = None
 
@@ -90,8 +91,10 @@ weight_name = None
 
 ################################ get model  ######################################################
 # Download 'FC.npy' from https://drive.google.com/file/d/1WP4_9bps-NbX6GNBnhFu8itV3y1jriJL/view?usp=sharing
+
+print("hi2")
 model = get_model(
-    graph_path='FC.npy', 
+    graph_path='FC_random.npy', 
     ROI_N=ROI_N,
     frames=frames,
     kernels=[8,8,8,16,32,32], 
@@ -131,6 +134,7 @@ model_history = model.fit(x_train, y_train,
                             callbacks=[checkpointer, lr_record, reduce_lr, earlystop])
 
 
+'''
 print('validation...')
 with open(model_path, 'rb') as fp:
     tmp = imp.load_module(model_path[:-3], fp, model_path,('.py', 'rb', imp.PY_SOURCE))
@@ -162,3 +166,4 @@ save_logs_models(model, model_history, acc=val_tmp[1],
     folder='tmp/', 
     lr_hist=lr_hist, file_name=file_name, loss_name='loss', 
     acc_name='acc', tmp_name=tmp_name)
+'''
