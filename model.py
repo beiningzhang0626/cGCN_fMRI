@@ -92,9 +92,7 @@ def T_edge_conv(point_cloud_series, graph, kernel=2, activation_fn='relu', k=5):
         The output shape => (None, ROI_N, ROI_N).
         """
         graph_shape, pc_shape = input_shapes
-        print("hihihihihihihihihhii")
-        print(graph_shape)
-        ROI_N1, ROI_N2 = graph_shape  # e.g. (236, 236)
+        ROI_N1, ROI_N2 = (236,236)  # e.g. (236, 236)
         return (None, ROI_N1, ROI_N2)
 
     # 1) tile graph
@@ -103,12 +101,13 @@ def T_edge_conv(point_cloud_series, graph, kernel=2, activation_fn='relu', k=5):
             tf.expand_dims(x[0], axis=0),  # => (1, ROI_N, ROI_N)
             [tf.shape(x[1])[0], 1, 1]      # => (batch_size, ROI_N, ROI_N)
         ),
-        output_shape=tile_graph_output_shape
+        output_shape=(1, 1, 236, 8)
     )([graph, point_cloud_series])
 
     # 2) Build edge features
     edge_feature = layers.Lambda(
-        lambda x: T_get_edge_feature(point_cloud_series=x[0], nn_idx=x[1], k=k)
+        lambda x: T_get_edge_feature(point_cloud_series=x[0], nn_idx=x[1], k=k), 
+        output_shape=(1, 1, 236, 8)
     )([point_cloud_series, graph_tiled])
 
     # 3) Conv + max
