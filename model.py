@@ -1,3 +1,4 @@
+#第一次用GitHub，略微试试能不能改点东西然后加进去
 import keras
 from keras import layers
 from keras import layers
